@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	//	"time"
@@ -16,30 +17,41 @@ type extRegexp struct {
 	*regexp.Regexp
 }
 
+type ConnectorStat struct {
+	Data struct {
+		OptiqPartitions []struct {
+			CPUCores []struct {
+				AvgEventsPerLoop   float64 `json:"avgEventsPerLoop"`
+				Core               int     `json:"core"`
+				CoreUsagePercent   float64 `json:"coreUsage_percent"`
+				EventsCount        int     `json:"eventsCount"`
+				MaxEventsPerLoop   int     `json:"maxEventsPerLoop"`
+				TredzoneTotalLoops int     `json:"tredzoneTotalLoops"`
+				TredzoneUsedLoops  int     `json:"tredzoneUsedLoops"`
+			} `json:"cpuCores"`
+			ExpectedCoresCount int    `json:"expectedCoresCount"`
+			InstanceType       string `json:"instanceType"`
+			KafkaUsages        []struct {
+				Partitions []interface{} `json:"partitions"`
+				Topic      string        `json:"topic"`
+			} `json:"kafkaUsages"`
+			PartitionID     int    `json:"partitionId"`
+			PartitionNumber int    `json:"partitionNumber"`
+			Period          int    `json:"period"`
+			PublicationTime int    `json:"publicationTime"`
+			ServerName      string `json:"serverName"`
+		} `json:"optiqPartitions"`
+		OptiqSegment     int    `json:"optiqSegment"`
+		OptiqSegmentName string `json:"optiqSegmentName"`
+	} `json:"data"`
+	MsgType    string `json:"msgType"`
+	SourceType string `json:"sourceType"`
+}
+
+// global variables
 var (
 	config cfg.Configuration
 )
-
-// add a new method to our new regular expression type
-func (r *extRegexp) FindStringSubmatchMap(s string) map[string]string {
-	captures := make(map[string]string)
-
-	match := r.FindStringSubmatch(s)
-	if match == nil {
-		return captures
-	}
-
-	for i, name := range r.SubexpNames() {
-		// Ignore the whole regexp match and unnamed groups
-		if i == 0 || name == "" {
-			continue
-		}
-
-		captures[name] = match[i]
-
-	}
-	return captures
-}
 
 // Verbose prints on standard output string argument if (and only if) -v option has been set in program arguments.
 func Verbose(s string, args ...interface{}) {
@@ -49,13 +61,11 @@ func Verbose(s string, args ...interface{}) {
 }
 
 func main() {
-	//	t := time.Now()
 	//t := time.Unix(0, 1501681526043505000)
 
 	// Command-line arguments parsing
 	config, _ := cli.ParseCliArgs()
 	Verbose("Parsed arguments : %s\n", config)
-	//	Verbose("config = %s\n", config)
 
 	// Parse log and extract JSON from each line for specific Regexp
 	for _, currFile := range config.Files {
@@ -77,14 +87,24 @@ func main() {
 			for i, n := range r2 {
 				md[n1[i]] = n
 			}
-			//fmt.Printf("[debug] timestamp = %s\n", md["timestamp"])
-			//fmt.Printf("md = %v\n", md)
-			json := md["json"]
 
-			if "" == json {
+			extracted := md["json"]
+
+			if "" == extracted {
 				return "", false
 			}
-			return json, true
+
+			newStat := ConnectorStat{}
+			if extracted != "" {
+				err := json.Unmarshal([]byte(extracted), &newStat)
+				if nil != err {
+					fmt.Printf("ERROR while decoding JSON from file line %s - %s", extracted, err)
+				}
+				fmt.Printf("JSON STRUC ==== %s\n", newStat.Data.OptiqPartitions[0].PublicationTime)
+			}
+
+			return extracted, true
 		})
 	}
+
 }
