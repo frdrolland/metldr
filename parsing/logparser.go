@@ -9,7 +9,6 @@ import (
 
 // Parse command-line arguments and initialize configuration struct from it.
 func ParseLines(filePath string, parse func(string) (string, bool)) ([]string, error) {
-	fmt.Printf("Importing file %s\n", filePath)
 	inputFile, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -27,7 +26,6 @@ func ParseLines(filePath string, parse func(string) (string, bool)) ([]string, e
 			fmt.Println(output)
 			results = append(results, output)
 		}
-
 	}
 
 	if err := scanner.Err(); err != nil {

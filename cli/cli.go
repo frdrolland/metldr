@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/docopt/docopt-go"
 	"github.com/frdrolland/pcaptool/cfg"
 )
@@ -24,7 +22,6 @@ Options:
 
 	arguments, _ := docopt.Parse(usage, nil, true, "Pcap Tool 1.0", false)
 	config.Files = arguments["<filename>"].([]string)
-	fmt.Printf("Parsed arguments : %s\n", config)
 
 	return
 }

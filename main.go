@@ -4,7 +4,9 @@ package main
 import (
 	"fmt"
 	"regexp"
+	//	"time"
 
+	"github.com/frdrolland/pcaptool/cfg"
 	"github.com/frdrolland/pcaptool/cli"
 	"github.com/frdrolland/pcaptool/parsing"
 )
@@ -13,6 +15,10 @@ import (
 type extRegexp struct {
 	*regexp.Regexp
 }
+
+var (
+	config cfg.Configuration
+)
 
 // add a new method to our new regular expression type
 func (r *extRegexp) FindStringSubmatchMap(s string) map[string]string {
@@ -35,48 +41,50 @@ func (r *extRegexp) FindStringSubmatchMap(s string) map[string]string {
 	return captures
 }
 
+// Verbose prints on standard output string argument if (and only if) -v option has been set in program arguments.
+func Verbose(s string, args ...interface{}) {
+	if config.Verbose {
+		fmt.Printf("%s\n", s)
+	}
+}
+
 func main() {
+	//	t := time.Now()
+	//t := time.Unix(0, 1501681526043505000)
 
 	// Command-line arguments parsing
 	config, _ := cli.ParseCliArgs()
-	fmt.Printf("config = %s\n", config)
+	Verbose("Parsed arguments : %s\n", config)
+	//	Verbose("config = %s\n", config)
 
-	// Parse log
+	// Parse log and extract JSON from each line for specific Regexp
 	for _, currFile := range config.Files {
 		// element is the element from someSlice for where we are
+		Verbose("Importing file %s\n", currFile)
 		parsing.ParseLines(currFile, func(s string) (string, bool) {
 
-			//re := regexp.MustCompile("(.*)\\s\\|\\s(.*)\\s\\|\\s(.*)\\s\\|\\s(.*)\\s\\|\\s(.*)\\s\\|\\sConnectors.hpp(.*)\\s\\|\\s<json>(.*)")
 			// ok:
-			//re := regexp.MustCompile("(.*)Connectors\\.hpp(?P<json>(.*))")
-			re := extRegexp{regexp.MustCompile(`(.*)Connectors\\.hpp(?P<json>(.*))`)}
+			re := regexp.MustCompile("(?P<timestamp>.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+Connectors\\.hpp\\:\\d+\\s+\\|\\s+(?P<json>(.*))")
 
-			//json := re.FindAllString(s, -1)
-			json := re.FindStringSubmatchMap(s)
-			if nil == json {
+			n1 := re.SubexpNames()
+			r2 := re.FindStringSubmatch(s)
+			if nil == r2 {
 				return "", false
 			}
-			fmt.Printf("[debug] %s\n", json)
-			return json["json"], true
+
+			md := map[string]string{}
+
+			for i, n := range r2 {
+				md[n1[i]] = n
+			}
+			//fmt.Printf("[debug] timestamp = %s\n", md["timestamp"])
+			//fmt.Printf("md = %v\n", md)
+			json := md["json"]
+
+			if "" == json {
+				return "", false
+			}
+			return json, true
 		})
 	}
-
-	/*
-
-		re := regexp.MustCompile("(?P<first_char>.)(?P<middle_part>.*)(?P<last_char>.)")
-		n1 := re.SubexpNames()
-		r2 := re.FindAllStringSubmatch("Super", -1)[0]
-
-		md := map[string]string{}
-		for i, n := range r2 {
-			fmt.Printf("%d. match='%s'\tname='%s'\n", i, n, n1[i])
-			md[n1[i]] = n
-		}
-		fmt.Printf("The names are  : %v\n", n1)
-		fmt.Printf("The matches are: %v\n", r2)
-		fmt.Printf("The first character is %s\n", md["first_char"])
-		fmt.Printf("The last  character is %s\n", md["last_char"])
-
-		fmt.Println("pcaptool [end]")
-	*/
 }
