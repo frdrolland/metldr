@@ -2,8 +2,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	//	"time"
 
@@ -100,7 +102,42 @@ func main() {
 				if nil != err {
 					fmt.Printf("ERROR while decoding JSON from file line %s - %s", extracted, err)
 				}
-				fmt.Printf("JSON STRUC ==== %s\n", newStat.Data.OptiqPartitions[0].PublicationTime)
+
+				// Build line protocol message for InfluxDB
+				var buf bytes.Buffer
+				buf = bytes.Buffer{}
+
+				//TODO Code à optimiser: (remplacer les fmt.Sprint par des buf.Write 'simples')
+				for _, partStat := range newStat.Data.OptiqPartitions {
+
+					for _, coreStat := range partStat.CPUCores {
+						// Reinit buffer
+						buf.Truncate(0)
+
+						// measurement
+						buf.WriteString("trading_chain.system_health_status")
+						buf.WriteString(" ")
+
+						// tagset
+						buf.WriteString(fmt.Sprintf(`part_id=%d,part_num=%d,server_name="%s",type="%s",core=%d`, partStat.PartitionID, partStat.PartitionNumber, partStat.ServerName, partStat.InstanceType, coreStat.Core))
+
+						// timestamp
+						buf.WriteString(" ")
+						buf.WriteString(fmt.Sprintf("%d", partStat.PublicationTime))
+
+						//resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
+						//						var DefaultClient = &Client{}
+						fmt.Printf("%s\n", buf.String())
+
+						resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
+						if nil != err {
+							fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
+						} else {
+							fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
+						}
+					}
+				}
+
 			}
 
 			return extracted, true
