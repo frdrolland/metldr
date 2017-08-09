@@ -76,6 +76,9 @@ func main() {
 		Verbose("Importing file %s\n", currFile)
 		parsing.ParseLines(currFile, func(s string) (string, bool) {
 
+			var buf bytes.Buffer
+			buf = bytes.Buffer{}
+
 			// ok:
 			re := regexp.MustCompile("(?P<timestamp>.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+(.*)\\s+\\|\\s+Connectors\\.hpp\\:\\d+\\s+\\|\\s+(?P<json>(.*))")
 
@@ -105,15 +108,13 @@ func main() {
 				}
 
 				// Build line protocol message for InfluxDB
-				var buf bytes.Buffer
-				buf = bytes.Buffer{}
+				buf.Truncate(0)
 
 				//TODO Code à optimiser: (remplacer les fmt.Sprint par des buf.Write 'simples')
 				for _, partStat := range newStat.Data.OptiqPartitions {
 
 					for _, coreStat := range partStat.CPUCores {
 						// Reinit buffer
-						buf.Truncate(0)
 
 						// measurement
 						buf.WriteString("system_health_status")
@@ -130,26 +131,26 @@ func main() {
 						buf.WriteString(" ")
 						buf.WriteString(fmt.Sprintf("%d", partStat.PublicationTime))
 
-						//resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
-						//						var DefaultClient = &Client{}
-						//fmt.Printf("%s\n", buf.String())
-						switch command := config.Command; command {
-						case "import":
-							// Import data ni InfluxDB
-							resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
-							if nil != err {
-								fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
-							} else {
-								fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
-							}
-						case "show":
-							// Show only generated data on standard output
-							fmt.Printf("%s\n", buf.String())
-						default:
-							log.Fatal(fmt.Sprintf("Unknown command: %s", command))
-							os.Exit(10)
-						}
+						buf.WriteString("\n")
+
 					}
+				}
+
+				switch command := config.Command; command {
+				case "import":
+					// Import data ni InfluxDB
+					resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
+					if nil != err {
+						fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
+					} else {
+						fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
+					}
+				case "show":
+					// Show only generated data on standard output
+					fmt.Printf("%s", buf.String())
+				default:
+					log.Fatal(fmt.Sprintf("Unknown command: %s", command))
+					os.Exit(10)
 				}
 
 			}
