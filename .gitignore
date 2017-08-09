@@ -16,6 +16,9 @@
 # Local log files
 *.log
 
+# Sample data filse
+sample.txt
+
 # Project binaries
 pcaptool
 
