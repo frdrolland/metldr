@@ -2,7 +2,7 @@ package parsing
 
 import (
 	"bufio"
-	"fmt"
+	//	"fmt"
 	"log"
 	"os"
 )
@@ -23,7 +23,7 @@ func ParseLines(filePath string, parse func(string) (string, bool)) ([]string, e
 	var results []string
 	for scanner.Scan() {
 		if output, add := parse(scanner.Text()); add {
-			fmt.Println(output)
+			//fmt.Println(output)
 			results = append(results, output)
 		}
 	}

@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	//	"time"
 
@@ -63,7 +65,6 @@ func Verbose(s string, args ...interface{}) {
 }
 
 func main() {
-	//t := time.Unix(0, 1501681526043505000)
 
 	// Command-line arguments parsing
 	config, _ := cli.ParseCliArgs()
@@ -115,11 +116,15 @@ func main() {
 						buf.Truncate(0)
 
 						// measurement
-						buf.WriteString("trading_chain.system_health_status")
-						buf.WriteString(" ")
+						buf.WriteString("system_health_status")
 
 						// tagset
-						buf.WriteString(fmt.Sprintf(`part_id=%d,part_num=%d,server_name="%s",type="%s",core=%d`, partStat.PartitionID, partStat.PartitionNumber, partStat.ServerName, partStat.InstanceType, coreStat.Core))
+						buf.WriteString(",")
+						buf.WriteString(fmt.Sprintf(`part_id=%d,part_num=%d,server_name=%s,type=%s,core=%d`, partStat.PartitionID, partStat.PartitionNumber, partStat.ServerName, partStat.InstanceType, coreStat.Core))
+
+						// tagset
+						buf.WriteString(" ")
+						buf.WriteString(fmt.Sprintf(`tz_loops_total=%d,tz_loops_used=%d,events=%d,core_usage_pct="%f",avg_events_per_loop="%f",max_events_per_loop=%d`, coreStat.TredzoneTotalLoops, coreStat.TredzoneUsedLoops, coreStat.EventsCount, coreStat.CoreUsagePercent, coreStat.AvgEventsPerLoop, coreStat.MaxEventsPerLoop))
 
 						// timestamp
 						buf.WriteString(" ")
@@ -127,13 +132,22 @@ func main() {
 
 						//resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
 						//						var DefaultClient = &Client{}
-						fmt.Printf("%s\n", buf.String())
-
-						resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
-						if nil != err {
-							fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
-						} else {
-							fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
+						//fmt.Printf("%s\n", buf.String())
+						switch command := config.Command; command {
+						case "import":
+							// Import data ni InfluxDB
+							resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
+							if nil != err {
+								fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
+							} else {
+								fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
+							}
+						case "show":
+							// Show only generated data on standard output
+							fmt.Printf("%s\n", buf.String())
+						default:
+							log.Fatal(fmt.Sprintf("Unknown command: %s", command))
+							os.Exit(10)
 						}
 					}
 				}
