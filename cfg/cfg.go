@@ -5,3 +5,7 @@ type Configuration struct {
 	Files   []string
 	Command string
 }
+
+var (
+	Global Configuration
+)
