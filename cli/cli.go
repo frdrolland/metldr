@@ -10,10 +10,10 @@ func ParseCliArgs() (config cfg.Configuration, err error) {
 	usage := `pcaptool.
 
 Usage:
-  pcaptool show <filename>...
-  pcaptool import <filename>...
-  pcaptool -h | --help
-  pcaptool --version
+  metldr show <filename>...
+  metldr import <filename>...
+  metldr -h | --help
+  metldr --version
 
 Options:
   -h --help     Show this screen.
