@@ -7,28 +7,25 @@ import (
 )
 
 // Parse command-line arguments and initialize configuration struct from it.
-func ParseLines(filePath string, parse func(string) (string, bool)) ([]string, error) {
+func ParseLines(filePath string, parse func(string) (string, bool)) error {
 	inputFile, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if nil == inputFile {
 		log.Fatal("File not found : " + filePath)
-		return nil, nil
+		return nil
 	}
 	defer inputFile.Close()
 
 	scanner := bufio.NewScanner(inputFile)
-	var results []string
 	for scanner.Scan() {
-		if output, add := parse(scanner.Text()); add {
-			//fmt.Println(output)
-			results = append(results, output)
-		}
+		parse(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
+		return err
 	}
-	return results, nil
+	return nil
 }
