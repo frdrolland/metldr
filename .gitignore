@@ -18,6 +18,7 @@
 
 # Sample data filse
 sample.txt
+.sample_json.txt
 
 # Project binaries
 pcaptool
