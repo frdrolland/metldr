@@ -7,8 +7,6 @@ if [ -z "$dest_file" ]; then
   exit 1
 fi
 
-#awk -F "|" '{ print gsub(/[\s\t]+$/, "", $6); }' ${dest_file} | sort -u
 for stattype in $(awk -F "|" '{ print $6; }' ${dest_file} | tr -d " " | sort -u); do
-  #echo "## ${stattype}"
   grep "${stattype}" ${dest_file} | awk -F "|" '{ print $NF;}'
 done

@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	//	"time"
 
 	"github.com/frdrolland/pcaptool/cfg"
 	"github.com/frdrolland/pcaptool/cli"
