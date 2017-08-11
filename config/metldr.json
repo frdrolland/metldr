@@ -1,0 +1,7 @@
+{
+	"verbose": false,
+	"output.influxdb": {
+		"url": "http://localhost:8086",
+		"database": "testfro"
+	}
+}

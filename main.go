@@ -30,6 +30,8 @@ func main() {
 	cfg.Global = config
 	Verbose("Parsed arguments : %s\n", config)
 
+	cfg.Init()
+
 	// Parse log and extract JSON from each line for specific Regexp
 	for _, currFile := range config.Files {
 		// element is the element from someSlice for where we are

@@ -56,7 +56,8 @@ func ProcessEvent(newStat ctmetrics.ConnectorStat) error {
 			fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
 			return err
 		} else {
-			fmt.Printf("UPLOADED: %s - STATUS=%d\n", buf.String(), resp.Status)
+
+			fmt.Printf("INFLUXDB STATUS=%s\n", resp.Status)
 		}
 	case "show":
 		// Show only generated data on standard output
