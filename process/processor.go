@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/frdrolland/pcaptool/cfg"
-	"github.com/frdrolland/pcaptool/dto/ctmetrics"
+	"github.com/frdrolland/metldr/cfg"
+	"github.com/frdrolland/metldr/dto/ctmetrics"
 )
 
 //

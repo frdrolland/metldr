@@ -4,10 +4,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/frdrolland/pcaptool/cfg"
-	"github.com/frdrolland/pcaptool/cli"
-	"github.com/frdrolland/pcaptool/parsing"
-	"github.com/frdrolland/pcaptool/parsing/ctmetrics"
+	"github.com/frdrolland/metldr/cfg"
+	"github.com/frdrolland/metldr/cli"
+	"github.com/frdrolland/metldr/parsing"
+	"github.com/frdrolland/metldr/parsing/ctmetrics"
 )
 
 // global variables
@@ -22,7 +22,7 @@ func Verbose(s string, args ...interface{}) {
 	}
 }
 
-// Main method for pcaptool executable.
+// Main method for metldr executable.
 func main() {
 
 	// Command-line arguments parsing

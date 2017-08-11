@@ -2,12 +2,13 @@ package cli
 
 import (
 	"github.com/docopt/docopt-go"
-	"github.com/frdrolland/pcaptool/cfg"
+
+	"github.com/frdrolland/metldr/cfg"
 )
 
 // Parse command-line arguments and initialize configuration struct from it.
 func ParseCliArgs() (config cfg.Configuration, err error) {
-	usage := `pcaptool.
+	usage := `metldr.
 
 Usage:
   metldr show <filename>...

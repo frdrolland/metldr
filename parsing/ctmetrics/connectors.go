@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/frdrolland/pcaptool/dto/ctmetrics"
-	"github.com/frdrolland/pcaptool/process"
+	"github.com/frdrolland/metldr/dto/ctmetrics"
+	"github.com/frdrolland/metldr/process"
 )
 
 var (
