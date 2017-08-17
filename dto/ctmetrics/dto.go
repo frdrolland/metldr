@@ -24,7 +24,7 @@ type ConnectorStat struct {
 			PartitionID     int    `json:"partitionId"`
 			PartitionNumber int    `json:"partitionNumber"`
 			Period          int    `json:"period"`
-			PublicationTime int    `json:"publicationTime"`
+			PublicationTime int64  `json:"publicationTime"`
 			ServerName      string `json:"serverName"`
 		} `json:"optiqPartitions"`
 		OptiqSegment     int    `json:"optiqSegment"`
