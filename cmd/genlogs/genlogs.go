@@ -10,7 +10,7 @@ import (
 
 	"github.com/docopt/docopt-go"
 
-	"github.com/frdrolland/metldr/dto/ctmetrics"
+	"github.com/frdrolland/metldr/ctmetrics"
 )
 
 var (
