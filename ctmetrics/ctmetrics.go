@@ -24,76 +24,81 @@ var (
 //
 // Tries to parse line as if it contains "Connectors" stats
 //
-func TryConnectorLine(s string) (string, bool) {
-
-	// ok:
+func ParseConnectorLines(lines []string) bool {
 
 	n1 := InputRegex.SubexpNames()
-	r2 := InputRegex.FindStringSubmatch(s)
-	if nil == r2 {
-		return "", false
+	if nil == lines {
+		return false
 	}
 
-	md := map[string]string{}
+	var bufStats []ConnectorStat = []ConnectorStat{}
 
-	for i, n := range r2 {
-		md[n1[i]] = n
-	}
-
-	extracted := md["json"]
-
-	if "" == extracted {
-		return "", false
-	}
-
-	newStat := ConnectorStat{}
-	if extracted != "" {
-		err := json.Unmarshal([]byte(extracted), &newStat)
-		if nil != err {
-			fmt.Printf("ERROR while decoding JSON from file line %s - %s", extracted, err)
+	for _, s := range lines {
+		r2 := InputRegex.FindStringSubmatch(s)
+		if nil == r2 {
+			return false
 		}
 
-		ProcessEvent(newStat)
+		md := map[string]string{}
 
+		for i1, n := range r2 {
+			md[n1[i1]] = n
+		}
+
+		extracted := md["json"]
+
+		if "" == extracted {
+			return false
+		}
+
+		newStat := ConnectorStat{}
+		if extracted != "" {
+			err := json.Unmarshal([]byte(extracted), &newStat)
+			if nil != err {
+				fmt.Printf("ERROR while decoding JSON from file line %s - %s", extracted, err)
+			}
+			bufStats = append(bufStats, newStat)
+		}
 	}
+	ProcessEvents(bufStats)
 
-	return extracted, true
+	return true
 }
 
 //
 // Processes an event and send it to stdout or to InfluxDB, depending on which command is executed.
 //
-func ProcessEvent(newStat ConnectorStat) error {
+func ProcessEvents(stats []ConnectorStat) error {
 
 	var buf bytes.Buffer
 	buf = bytes.Buffer{}
 
-	// Build line protocol message for InfluxDB
-	buf.Truncate(0)
+	for _, newStat := range stats {
+		//TODO Code à optimiser: (remplacer les fmt.Sprint par des buf.Write 'simples')
+		for _, partStat := range newStat.Data.OptiqPartitions {
 
-	//TODO Code à optimiser: (remplacer les fmt.Sprint par des buf.Write 'simples')
-	for _, partStat := range newStat.Data.OptiqPartitions {
+			for _, coreStat := range partStat.CPUCores {
 
-		for _, coreStat := range partStat.CPUCores {
-			// Reinit buffer
+				// measurement
+				buf.WriteString("connector")
 
-			// measurement
-			buf.WriteString("connector")
+				// tagset
+				buf.WriteString(",")
+				buf.WriteString(fmt.Sprintf(`part_id=%d,part_num=%d,server_name=%s,type=%s,core=%d`, partStat.PartitionID, partStat.PartitionNumber, partStat.ServerName, partStat.InstanceType, coreStat.Core))
 
-			// tagset
-			buf.WriteString(",")
-			buf.WriteString(fmt.Sprintf(`part_id=%d,part_num=%d,server_name=%s,type=%s,core=%d`, partStat.PartitionID, partStat.PartitionNumber, partStat.ServerName, partStat.InstanceType, coreStat.Core))
+				// tagset
+				buf.WriteString(" ")
+				//buf.WriteString(fmt.Sprintf(`tz_loops_total=%d,tz_loops_used=%d,events=%d,core_usage_pct="%f",avg_events_per_loop="%f",max_events_per_loop=%d`, coreStat.TredzoneTotalLoops, coreStat.TredzoneUsedLoops, coreStat.EventsCount, coreStat.CoreUsagePercent, coreStat.AvgEventsPerLoop, coreStat.MaxEventsPerLoop))
+				buf.WriteString(fmt.Sprintf(`tz_loops_total=%d,tz_loops_used=%d,events=%d,core_usage_pct=%f,avg_events_per_loop=%f,max_events_per_loop=%d`, coreStat.TredzoneTotalLoops, coreStat.TredzoneUsedLoops, coreStat.EventsCount, coreStat.CoreUsagePercent, coreStat.AvgEventsPerLoop, coreStat.MaxEventsPerLoop))
 
-			// tagset
-			buf.WriteString(" ")
-			buf.WriteString(fmt.Sprintf(`tz_loops_total=%d,tz_loops_used=%d,events=%d,core_usage_pct="%f",avg_events_per_loop="%f",max_events_per_loop=%d`, coreStat.TredzoneTotalLoops, coreStat.TredzoneUsedLoops, coreStat.EventsCount, coreStat.CoreUsagePercent, coreStat.AvgEventsPerLoop, coreStat.MaxEventsPerLoop))
+				// timestamp
+				buf.WriteString(" ")
+				buf.WriteString(fmt.Sprintf("%d", partStat.PublicationTime))
 
-			// timestamp
-			buf.WriteString(" ")
-			buf.WriteString(fmt.Sprintf("%d", partStat.PublicationTime))
+				// EOL
+				buf.WriteString("\n")
 
-			buf.WriteString("\n")
-
+			}
 		}
 	}
 
@@ -105,7 +110,7 @@ func ProcessEvent(newStat ConnectorStat) error {
 			fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
 			return err
 		} else {
-
+			//TODO Faire autre chose des codes retours !!
 			fmt.Printf("INFLUXDB STATUS=%s\n", resp.Status)
 		}
 	case "show":

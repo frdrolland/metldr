@@ -36,7 +36,7 @@ func main() {
 	for _, currFile := range config.Files {
 		// element is the element from someSlice for where we are
 		Verbose("Importing file %s\n", currFile)
-		parsing.ParseLines(currFile, ctmetrics.TryConnectorLine)
+		parsing.ParseLines(currFile, ctmetrics.ParseConnectorLines)
 	}
 
 }

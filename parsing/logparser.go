@@ -7,8 +7,12 @@ import (
 	"os"
 )
 
+//const (
+//	OUT_BUFFER_LENGTH := 100
+//)
+
 // Parse command-line arguments and initialize configuration struct from it.
-func ParseLines(filePath string, parse func(string) (string, bool)) error {
+func ParseLines(filePath string, process func([]string) bool) error {
 	inputFile, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -41,8 +45,19 @@ func ParseLines(filePath string, parse func(string) (string, bool)) error {
 	}
 
 	//	scanner = bufio.NewScanner(inputFile)
+	//buffer := make([]string, 100000, 100000)
+	buffer := []string{}
+
+	buflen := 0
 	for scanner.Scan() {
-		parse(scanner.Text())
+
+		// Adds to buffer
+		buffer := append(buffer, scanner.Text())
+		//fmt.Printf("%d\n", buflen)
+		//buffer[buflen] = scanner.Text()
+
+		process(buffer)
+		buflen++
 	}
 
 	if err := scanner.Err(); err != nil {
