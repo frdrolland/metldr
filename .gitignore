@@ -23,5 +23,6 @@ sample.txt
 .sample_json.txt
 
 # Project binaries
-metldr
+cmd/metldr/metldr
+cmd/genlogs/genlogs
 
