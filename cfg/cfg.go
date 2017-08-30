@@ -11,6 +11,11 @@ type Configuration struct {
 	Verbose bool
 	Files   []string
 	Command string
+	Source  string
+	// Kafka
+	BrokerList string
+	KafkaGroup string
+	KafkaTopic string
 }
 
 var (
@@ -28,6 +33,7 @@ func Init() {
 	viper.SetDefault("logging.dir", "./logs")
 	viper.SetDefault("output.influxdb.url", "http://localhost:8086")
 	viper.SetDefault("output.influxdb.database", "ct")
+	viper.SetDefault("input.kafka.brokers", "localhost:9092")
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
@@ -39,6 +45,11 @@ func Init() {
 		//TODO utiliser un log
 		fmt.Println("Config file changed:", e.Name)
 	})
+
+	brokers := viper.Get("input.kafka.brokers")
+	if "" == Global.BrokerList {
+		Global.BrokerList = brokers.(string)
+	}
 
 	dburl := viper.Get("output.influxdb.url")
 	dbname := viper.Get("output.influxdb.database")

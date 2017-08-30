@@ -66,6 +66,30 @@ func ParseConnectorLines(lines []string) bool {
 }
 
 //
+// ????????????????????
+//
+func GetStat(jsonstr string) (stat ConnectorStat) {
+	newStat := ConnectorStat{}
+	if jsonstr != "" {
+		err := json.Unmarshal([]byte(jsonstr), &newStat)
+		if nil != err {
+			fmt.Printf("ERROR while decoding JSON from string %s - %s", jsonstr, err)
+		}
+	}
+	//TODO Retourner une erreur plutôt
+	return newStat
+}
+
+//
+// Processes an event and send it to stdout or to InfluxDB, depending on which command is executed.
+//
+func ProcessEvent(stat ConnectorStat) error {
+	var stats []ConnectorStat
+	stats = []ConnectorStat{stat}
+	return ProcessEvents(stats)
+}
+
+//
 // Processes an event and send it to stdout or to InfluxDB, depending on which command is executed.
 //
 func ProcessEvents(stats []ConnectorStat) error {
@@ -97,7 +121,6 @@ func ProcessEvents(stats []ConnectorStat) error {
 
 				// EOL
 				buf.WriteString("\n")
-
 			}
 		}
 	}

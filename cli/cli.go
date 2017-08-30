@@ -11,8 +11,10 @@ func ParseCliArgs() (config cfg.Configuration, err error) {
 	usage := `metldr.
 
 Usage:
-  metldr show <filename>...
-  metldr import <filename>...
+  metldr show file <filename>...
+  metldr show  kafka <brokerlist> <group> <topic>
+  metldr import file <filename>...
+  metldr import kafka <brokerlist> <group> <topic>
   metldr -h | --help
   metldr --version
 
@@ -24,6 +26,8 @@ Options:
 
 	arguments, _ := docopt.Parse(usage, nil, true, "Pcap Tool 1.0", false)
 	config.Files = arguments["<filename>"].([]string)
+	//config.BrokerList = arguments["<brokerlist>"].([]string)
+	//fmt.Printf("ARGS = %s\n", arguments)
 
 	if arguments["import"].(bool) {
 		config.Command = "import"
@@ -31,5 +35,15 @@ Options:
 		config.Command = "show"
 	}
 
-	return
+	if arguments["kafka"].(bool) {
+		config.Source = "kafka"
+		config.BrokerList = arguments["<brokerlist>"].(string)
+		config.KafkaGroup = arguments["<group>"].(string)
+		config.KafkaTopic = arguments["<topic>"].(string)
+	} else if arguments["file"].(bool) {
+		config.Source = "file"
+	}
+
+	// Finally set global congig to read item
+	return config, nil
 }
