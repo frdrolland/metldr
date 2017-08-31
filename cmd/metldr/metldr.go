@@ -30,8 +30,6 @@ func main() {
 	// Command-line arguments parsing
 	config, _ := cli.ParseCliArgs()
 	cfg.Global = config
-	fmt.Printf("Brokers (1) = %s\n", config.BrokerList)
-	fmt.Printf("Brokers (2) = %s\n", cfg.Global.BrokerList)
 	Verbose("Parsed arguments : %s\n", config)
 
 	cfg.Init()

@@ -19,11 +19,9 @@ func ConsumeKafkaMetrics() {
 		os.Exit(1)
 	}
 
-	broker := cfg.Global.BrokerList
-	fmt.Printf("cfg.Global = %s\n", cfg.Global)
-	fmt.Printf("Brokers (3) = %s\n", cfg.Global.BrokerList)
-	group := cfg.Global.KafkaGroup
-	topics := []string{cfg.Global.KafkaTopic}
+	broker := cfg.Global.Input.Kafka.Brokers
+	group := cfg.Global.Input.Kafka.Group
+	topics := []string{cfg.Global.Input.Kafka.Topic}
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)

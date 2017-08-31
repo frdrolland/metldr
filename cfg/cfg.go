@@ -12,10 +12,21 @@ type Configuration struct {
 	Files   []string
 	Command string
 	Source  string
-	// Kafka
-	BrokerList string
-	KafkaGroup string
-	KafkaTopic string
+	Input   struct {
+		Kafka struct {
+			Brokers string `json:"brokers"`
+			Group   string `json:"group"`
+			Topic   string `json:"topic"`
+		}
+	}
+	Output struct {
+		InfluxDB struct {
+			Url      string
+			Database string
+			User     string
+			Password string
+		}
+	}
 }
 
 var (
@@ -33,11 +44,15 @@ func Init() {
 	viper.SetDefault("logging.dir", "./logs")
 	viper.SetDefault("output.influxdb.url", "http://localhost:8086")
 	viper.SetDefault("output.influxdb.database", "ct")
-	viper.SetDefault("input.kafka.brokers", "localhost:9092")
+	viper.SetDefault("input.kafka.brokers", "127.0.0.1:9092")
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+	err = viper.Unmarshal(&Global)
+	if err != nil {
+		panic(err)
 	}
 
 	viper.WatchConfig()
@@ -46,18 +61,9 @@ func Init() {
 		fmt.Println("Config file changed:", e.Name)
 	})
 
-	brokers := viper.Get("input.kafka.brokers")
-	if "" == Global.BrokerList {
-		Global.BrokerList = brokers.(string)
-	}
-
-	dburl := viper.Get("output.influxdb.url")
-	dbname := viper.Get("output.influxdb.database")
-
-	fmt.Printf("%s = %s\n", "output.influxdb.url", dburl)
-	fmt.Printf("%s = %s\n", "output.influxdb.database", dbname)
-	fmt.Printf("%s = %s\n", "output.influxdb.user", dbname)
-	fmt.Printf("%s = %s\n", "output.influxdb.password", dbname)
+	fmt.Printf("%s = %s\n", "input.kafka.brokers", Global.Input.Kafka.Brokers)
+	fmt.Printf("%s = %s\n", "output.influxdb.database", Global.Output.InfluxDB.Database)
+	fmt.Printf("%s = %s\n", "output.influxdb.user", Global.Output.InfluxDB.User)
+	fmt.Printf("%s = %s\n", "output.influxdb.password", Global.Output.InfluxDB.Password)
 	fmt.Println(viper.AllSettings())
-
 }

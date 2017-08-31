@@ -128,7 +128,8 @@ func ProcessEvents(stats []ConnectorStat) error {
 	switch command := cfg.Global.Command; command {
 	case "import":
 		// Import data ni InfluxDB
-		resp, err := http.Post("http://localhost:8086/write?db=testfro", "text/plain", &buf)
+		url := fmt.Sprintf("%s/write?db=%s", cfg.Global.Output.InfluxDB.Url, cfg.Global.Output.InfluxDB.Database)
+		resp, err := http.Post(url, "text/plain", &buf)
 		if nil != err {
 			fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
 			return err

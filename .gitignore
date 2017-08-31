@@ -25,4 +25,5 @@ sample.txt
 # Project binaries
 cmd/metldr/metldr
 cmd/genlogs/genlogs
+cmd/example/example
 
