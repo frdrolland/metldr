@@ -4,7 +4,9 @@
 		"brokers": "localhost:9092"
 	},
 	"output.influxdb": {
+		"protocol": "udp",
 		"url": "http://127.0.0.1:8086",
-		"database": "testfro"
+		"database": "testfro",
+		"udpaddr":"127.0.0.1:10001"
 	}
 }

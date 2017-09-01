@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
+	"syscall"
 
 	"github.com/frdrolland/metldr/cfg"
 )
@@ -128,22 +130,66 @@ func ProcessEvents(stats []ConnectorStat) error {
 	switch command := cfg.Global.Command; command {
 	case "import":
 		// Import data ni InfluxDB
-		url := fmt.Sprintf("%s/write?db=%s", cfg.Global.Output.InfluxDB.Url, cfg.Global.Output.InfluxDB.Database)
-		resp, err := http.Post(url, "text/plain", &buf)
-		if nil != err {
-			fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
-			return err
-		} else {
-			//TODO Faire autre chose des codes retours !!
-			fmt.Printf("INFLUXDB STATUS=%s\n", resp.Status)
+		switch protocol := cfg.Global.Output.InfluxDB.Protocol; protocol {
+		case "http":
+			url := fmt.Sprintf("%s/write?db=%s", cfg.Global.Output.InfluxDB.Url, cfg.Global.Output.InfluxDB.Database)
+			fmt.Printf("\n\n\nTITI\n\n\n")
+			resp, err := http.Post(url, "text/plain", &buf)
+			if nil != err {
+				fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
+				return err
+			} else {
+				//TODO Faire autre chose des codes retours !!
+				fmt.Printf("INFLUXDB STATUS=%s\n", resp.Status)
+				os.Exit(999)
+			}
+		case "udp":
+			fmt.Printf("*** %s\n", buf.String())
+			SendUdpToInfluxDb(buf)
+		default:
+			log.Fatal("Unknown mode '%s' for InfluxDB output", protocol)
 		}
 	case "show":
 		// Show only generated data on standard output
-		fmt.Printf("%s", buf.String())
+		fmt.Printf("%s\n", buf.String())
 	default:
 		log.Fatal(fmt.Sprintf("Unknown command: %s", command))
 		os.Exit(10)
 	}
 	return nil
+}
 
+/* A Simple function to verify error */
+func CheckError(err error) {
+	if err != nil {
+		fmt.Println("Error: ", err)
+		os.Exit(0)
+	}
+}
+
+// Send buffer data to InfluxDB database using UDP protocol
+func SendUdpToInfluxDb(buf bytes.Buffer) {
+	// TODO Move Address resolve and/or udp dial to another method so that it is done only once !!!
+	serverAddr, err := net.ResolveUDPAddr("udp", cfg.Global.Output.InfluxDB.UdpAddr)
+	CheckError(err)
+	conn, err := net.DialUDP("udp", nil, serverAddr)
+	CheckError(err)
+	fd, _ := conn.File()
+	value, _ := syscall.GetsockoptInt(int(fd.Fd()), syscall.SOL_SOCKET, syscall.SO_SNDBUF)
+	log.Println(value)
+
+	err = conn.SetWriteBuffer(25 * 1024 * 1024)
+	CheckError(err)
+
+	fd, _ = conn.File()
+	value, _ = syscall.GetsockoptInt(int(fd.Fd()), syscall.SOL_SOCKET, syscall.SO_SNDBUF)
+	log.Println(value)
+
+	defer conn.Close()
+	data := buf.String()
+	//_, err = conn.Write([]byte(buf.String()))
+	_, err = conn.Write([]byte(buf.String()))
+	if err != nil {
+		fmt.Println(data, err)
+	}
 }
