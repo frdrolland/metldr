@@ -1,0 +1,21 @@
+{
+	"verbose": false,
+	"input.kafka": {
+		"brokers": "localhost:9092"
+	},
+	"output.influxdb": {
+		"protocol": "http",
+		#"protocol": "udp",
+		# Kapacitor
+		"url": "http://127.0.0.1:9093",
+		# InfluxDB
+		#"url": "http://127.0.0.1:8086",
+		"database": "testfro",
+		# udpsrv (for testing only)
+		# "udpaddr":"127.0.0.1:10001"
+		# InfluxDB UDP listener
+		#"udpaddr":"127.0.0.1:8089"
+		# InfluxDB UDP listener
+		#"udpaddr":"127.0.0.1:8089"
+	}
+}
