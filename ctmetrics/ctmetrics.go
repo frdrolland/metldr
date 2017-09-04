@@ -133,7 +133,6 @@ func ProcessEvents(stats []ConnectorStat) error {
 		switch protocol := cfg.Global.Output.InfluxDB.Protocol; protocol {
 		case "http":
 			url := fmt.Sprintf("%s/write?db=%s&rp=%s", cfg.Global.Output.InfluxDB.Url, cfg.Global.Output.InfluxDB.Database, cfg.Global.Output.InfluxDB.RetPolicy)
-			fmt.Printf("\n\n\nTITI\n\n\n")
 			resp, err := http.Post(url, "text/plain", &buf)
 			if nil != err {
 				fmt.Printf("ERROR while uploading on InfluxDB: %s\n", err)
