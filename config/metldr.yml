@@ -11,6 +11,7 @@
 		# InfluxDB
 		#"url": "http://127.0.0.1:8086",
 		"database": "testfro",
+		"retpolicy": "autogen"
 		# udpsrv (for testing only)
 		# "udpaddr":"127.0.0.1:10001"
 		# InfluxDB UDP listener

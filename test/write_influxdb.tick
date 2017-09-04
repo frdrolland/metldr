@@ -1,0 +1,10 @@
+stream
+    // Select just the cpu measurement from our example database.
+    |from()
+    |log()
+      .level('INFO')
+      .prefix('FROLLAND')
+    |influxDBOut()
+//        .database('testfro')
+//        .retentionPolicy('autogen')
+//        .measurement('connector')

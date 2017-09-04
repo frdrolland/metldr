@@ -21,12 +21,13 @@ type Configuration struct {
 	}
 	Output struct {
 		InfluxDB struct {
-			Protocol string
-			Url      string
-			UdpAddr  string
-			Database string
-			User     string
-			Password string
+			Protocol  string
+			Url       string
+			UdpAddr   string
+			Database  string
+			RetPolicy string
+			User      string
+			Password  string
 		}
 	}
 }
@@ -48,6 +49,7 @@ func Init() {
 	viper.SetDefault("output.influxdb.url", "http://localhost:8086")
 	viper.SetDefault("output.influxdb.database", "ct")
 	viper.SetDefault("output.influxdb.udpaddr", "127.0.0.1:8089")
+	viper.SetDefault("output.influxdb.retpolicy", "autogen")
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
@@ -67,6 +69,7 @@ func Init() {
 	fmt.Printf("%s = %s\n", "input.kafka.brokers", Global.Input.Kafka.Brokers)
 	fmt.Printf("%s = %s\n", "output.influxdb.udpaddr", Global.Output.InfluxDB.UdpAddr)
 	fmt.Printf("%s = %s\n", "output.influxdb.database", Global.Output.InfluxDB.Database)
+	fmt.Printf("%s = %s\n", "output.influxdb.retpolicy", Global.Output.InfluxDB.RetPolicy)
 	fmt.Printf("%s = %s\n", "output.influxdb.user", Global.Output.InfluxDB.User)
 	fmt.Printf("%s = %s\n", "output.influxdb.password", Global.Output.InfluxDB.Password)
 	fmt.Println(viper.AllSettings())
