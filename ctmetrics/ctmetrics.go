@@ -143,7 +143,6 @@ func ProcessEvents(stats []ConnectorStat) error {
 				os.Exit(999)
 			}
 		case "udp":
-			fmt.Printf("*** %s\n", buf.String())
 			SendUdpToInfluxDb(buf)
 		default:
 			log.Fatal("Unknown mode '%s' for InfluxDB output", protocol)
