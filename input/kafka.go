@@ -2,80 +2,87 @@ package input
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/Shopify/sarama"
+	cluster "github.com/bsm/sarama-cluster"
 
 	"github.com/frdrolland/metldr/cfg"
 	"github.com/frdrolland/metldr/ctmetrics"
 )
 
+var (
+	partitions = "all"
+	offset     = "newest"
+	logger     = log.New(os.Stderr, "", log.LstdFlags)
+)
+
+//TODO A Déplacer !!!
+func printErrorAndExit(code int, format string, values ...interface{}) {
+	fmt.Fprintf(os.Stderr, "ERROR: %s\n", fmt.Sprintf(format, values...))
+	fmt.Fprintln(os.Stderr)
+	os.Exit(code)
+}
+
 func ConsumeKafkaMetrics() {
-	if len(os.Args) < 4 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <broker> <group> <topics..>\n",
-			os.Args[0])
-		os.Exit(1)
-	}
 
 	broker := cfg.Global.Input.Kafka.Brokers
 	group := cfg.Global.Input.Kafka.Group
 	topics := []string{cfg.Global.Input.Kafka.Topic}
 
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	// Init config
+	config := cluster.NewConfig()
+	//	if *verbose {
+	sarama.Logger = logger
+	//	} else {
+	config.Consumer.Return.Errors = true
+	config.Group.Return.Notifications = true
+	//	}
 
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":               broker,
-		"group.id":                        group,
-		"session.timeout.ms":              6000,
-		"go.events.channel.enable":        true,
-		"go.application.rebalance.enable": true,
-		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"}})
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)
-		os.Exit(1)
+	switch offset {
+	case "oldest":
+		config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	case "newest":
+		config.Consumer.Offsets.Initial = sarama.OffsetNewest
+	default:
+		log.Fatal("-offset should be `oldest` or `newest`")
 	}
 
-	fmt.Printf("Created Consumer %v\n", c)
+	// Init consumer, consume errors & messages
+	consumer, err := cluster.NewConsumer(strings.Split(broker, ","), group, topics, config)
+	if err != nil {
+		printErrorAndExit(69, "Failed to start consumer: %s", err)
+	}
+	defer consumer.Close()
 
-	err = c.SubscribeTopics(topics, nil)
+	// Create signal channel
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
-	run := true
-
-	for run == true {
+	// Consume all channels, wait for signal to exit
+	for {
 		select {
-		case sig := <-sigchan:
-			fmt.Printf("Caught signal %v: terminating\n", sig)
-			run = false
-
-		case ev := <-c.Events():
-			switch e := ev.(type) {
-			case kafka.AssignedPartitions:
-				fmt.Fprintf(os.Stderr, "%% %v\n", e)
-				c.Assign(e.Partitions)
-			case kafka.RevokedPartitions:
-				fmt.Fprintf(os.Stderr, "%% %v\n", e)
-				c.Unassign()
-			case *kafka.Message:
-				// TODO Traiter le message !!
-
-				ctStat := ctmetrics.GetStat(string(e.Value))
+		case msg, more := <-consumer.Messages():
+			if more {
+				fmt.Fprintf(os.Stdout, "%s/%d/%d\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Value)
+				ctStat := ctmetrics.GetStat(string(msg.Value))
 				ctmetrics.ProcessEvent(ctStat)
-
-				fmt.Printf("%% Message on %s:\n%s\n",
-					e.TopicPartition, string(e.Value))
-			case kafka.PartitionEOF:
-				fmt.Printf("%% Reached %v\n", e)
-			case kafka.Error:
-				fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
-				run = false
+				consumer.MarkOffset(msg, "")
 			}
+		case ntf, more := <-consumer.Notifications():
+			if more {
+				logger.Printf("Rebalanced: %+v\n", ntf)
+			}
+		case err, more := <-consumer.Errors():
+			if more {
+				logger.Printf("Error: %s\n", err.Error())
+			}
+		case <-sigchan:
+			return
 		}
 	}
-
-	fmt.Printf("Closing consumer\n")
-	c.Close()
 }

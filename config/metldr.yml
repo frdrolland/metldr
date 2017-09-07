@@ -7,9 +7,9 @@
 		"protocol": "http",
 		#"protocol": "udp",
 		# Kapacitor
-		"url": "http://127.0.0.1:9093",
+		#"url": "http://127.0.0.1:9093",
 		# InfluxDB
-		#"url": "http://127.0.0.1:8086",
+		"url": "http://127.0.0.1:8086",
 		"database": "testfro",
 		"retpolicy": "autogen",
 		# udpsrv (for testing only)

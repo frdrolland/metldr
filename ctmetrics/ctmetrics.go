@@ -139,8 +139,7 @@ func ProcessEvents(stats []ConnectorStat) error {
 				return err
 			} else {
 				//TODO Faire autre chose des codes retours !!
-				fmt.Printf("INFLUXDB STATUS=%s\n", resp.Status)
-				os.Exit(999)
+				fmt.Printf("INFLUXDB %s %d\n", url, resp.StatusCode)
 			}
 		case "udp":
 			SendUdpToInfluxDb(buf)

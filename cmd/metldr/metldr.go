@@ -47,4 +47,5 @@ func main() {
 	default:
 		log.Fatal(fmt.Sprintf("Unknown source: %s", source))
 	}
+	fmt.Printf("[end]")
 }
