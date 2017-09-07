@@ -28,6 +28,9 @@ func printErrorAndExit(code int, format string, values ...interface{}) {
 	os.Exit(code)
 }
 
+//
+//
+//
 func ConsumeKafkaMetrics() {
 
 	broker := cfg.Global.Input.Kafka.Brokers
@@ -36,12 +39,9 @@ func ConsumeKafkaMetrics() {
 
 	// Init config
 	config := cluster.NewConfig()
-	//	if *verbose {
 	sarama.Logger = logger
-	//	} else {
 	config.Consumer.Return.Errors = true
 	config.Group.Return.Notifications = true
-	//	}
 
 	switch offset {
 	case "oldest":
